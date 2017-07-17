@@ -1,0 +1,17 @@
+{
+  "name": "pachong",
+  "version": "1.0.0",
+  "description": "小说爬虫",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "xcsun",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.5.0",
+    "cheerio": "^1.0.0-rc.2",
+    "express": "^4.15.3",
+    "iconv-lite": "^0.4.18"
+  }
+}
