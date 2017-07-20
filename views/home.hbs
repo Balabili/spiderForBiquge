@@ -17,9 +17,11 @@
             </span>
         </div>
         <span>${writeFileName}</span>
+        <span>${currentSection}</span>
         <div class="progress" style="margin-top:10px;">
-            <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" v-bind:style="progressBar">
-                60%
+            <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"
+             v-bind:style="progressBar">
+                ${process}%
             </div>
         </div>
     </div>

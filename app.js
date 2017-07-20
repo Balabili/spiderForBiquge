@@ -10,9 +10,9 @@ const express = require('express'),
     });
 let urls = [],
     url = 'http://www.cangqionglongqi.com/',
-    currentUrl = '',
+    currentNovelSections = null,
     novelname = '',
-    outStream = null;
+    filepath = '';
 
 app.engine('hbs', handlebars.engine);
 app.set('view engine', 'hbs');
@@ -25,20 +25,23 @@ function getAllTitleUrls() {
             $ = cheerio.load(html, { decodeEntities: false }),
             allList = $("#list dd");
         for (let i = 0; i < allList.length; i++) {
-            urls.push(url + '/' + allList[i].childNodes[0].attribs.href);
+            let urlContainer = {};
+            urlContainer.id = i + 1;
+            urlContainer.url = url + '/' + allList[i].childNodes[0].attribs.href;
+            urlContainer.title = allList[i].childNodes[0].childNodes[0].data;
+            urls.push(urlContainer);
         }
         async.mapLimit(urls, 1, function (url, callback) {
             getText(url, callback);
         }, function () {
             console.log('Finish.');
-            outStream.end();
         });
     });
 };
-function getText(url, callback) {
+function getText(urlContainer, callback) {
     let delay = parseInt((Math.random() * 10000000) % 1000, 10);
-    console.log('现在正在抓取的是 ' + url + ',延时 ' + delay);
-    request({ url: url, method: 'GET', encoding: 'binary' }, function (err, res, body) {
+    console.log('现在正在抓取的是 ' + urlContainer.title + ',延时 ' + delay);
+    request({ url: urlContainer.url, method: 'GET', encoding: 'binary', timeout: 10000 }, function (err, res, body) {
         if (err || res.statusCode !== 200) {
             console.log(res.statusCode);
             console.log(err);
@@ -46,13 +49,16 @@ function getText(url, callback) {
             let html = iconv.decode(new Buffer(body, 'binary'), 'gb2312'),
                 $ = cheerio.load(html, { decodeEntities: false });
             txt = $("h1").text() + '\r\n' + $("#content").text().replace(/\s+/g, '\n');
-            outStream.write(txt);
+            currentNovelSections = urlContainer;
+            fs.appendFileSync(filepath, txt);
         }
         setTimeout(function () {
-            callback(null, url + ' html content');
+            callback(null, urlContainer.title + ' html content');
         }, delay);
     });
 };
+
+
 
 app.get('/', function (req, res) {
     res.render('home');
@@ -61,9 +67,20 @@ app.post('/writeFile/:novelName', function (req, res) {
     novelname = req.params.novelName;
     url = url + novelname;
     let filename = novelname + new Date().getTime() + '.txt';
-    outStream = fs.createWriteStream(__dirname + '/novel/' + filename);
+    filepath = __dirname + '/novel/' + filename;
     getAllTitleUrls();
     res.send(filename);
+});
+app.post('/writeProcess', function (req, res) {
+    let data = {};
+    if (currentNovelSections) {
+        data.process = ((currentNovelSections.id / urls.length) * 100).toFixed(2);
+        data.section = currentNovelSections.title;
+    } else {
+        data.process = 0;
+    }
+    res.send(data);
+
 });
 
 app.listen(8090);
