@@ -12,7 +12,10 @@ let urls = [],
     url = 'http://www.cangqionglongqi.com/',
     currentNovelSections = null,
     novelname = '',
-    filepath = '';
+    filepath = '',
+    q = async.queue(function (task, cb) {
+        getText(task, cb);
+    });
 
 app.engine('hbs', handlebars.engine);
 app.set('view engine', 'hbs');
@@ -31,30 +34,30 @@ function getAllTitleUrls() {
             urlContainer.title = allList[i].childNodes[0].childNodes[0].data;
             urls.push(urlContainer);
         }
-        async.mapLimit(urls, 1, function (url, callback) {
-            getText(url, callback);
-        }, function () {
-            console.log('Finish.');
-        });
+        for (let index in urls) {
+            q.push(urls[index]);
+        }
     });
 };
-function getText(urlContainer, callback) {
-    let delay = parseInt((Math.random() * 10000000) % 1000, 10);
-    console.log('现在正在抓取的是 ' + urlContainer.title + ',延时 ' + delay);
+function getText(urlContainer, cb) {
+    // let delay = parseInt((Math.random() * 10000000) % 1000, 10);
+    // console.log('现在正在抓取的是 ' + urlContainer.title + ';延时 ' + delay);
+    // setTimeout(function () {
+    // }, delay);
     request({ url: urlContainer.url, method: 'GET', encoding: 'binary', timeout: 10000 }, function (err, res, body) {
         if (err || res.statusCode !== 200) {
-            console.log(res.statusCode);
-            console.log(err);
+            err ? console.log(err) : console.log(res.statusCode);
+            cb();
+            q.push(urlContainer);
         } else {
+            console.log('现在正在抓取的是 ' + urlContainer.title);
             let html = iconv.decode(new Buffer(body, 'binary'), 'gb2312'),
                 $ = cheerio.load(html, { decodeEntities: false });
             txt = $("h1").text() + '\r\n' + $("#content").text().replace(/\s+/g, '\n');
             currentNovelSections = urlContainer;
             fs.appendFileSync(filepath, txt);
+            cb();
         }
-        setTimeout(function () {
-            callback(null, urlContainer.title + ' html content');
-        }, delay);
     });
 };
 
@@ -64,6 +67,7 @@ app.get('/', function (req, res) {
     res.render('home');
 });
 app.post('/writeFile/:novelName', function (req, res) {
+    urls = [];
     novelname = req.params.novelName;
     url = url + novelname;
     let filename = novelname + new Date().getTime() + '.txt';
