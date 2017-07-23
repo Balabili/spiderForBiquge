@@ -10,7 +10,8 @@ const express = require('express'),
         extname: 'hbs'
     });
 let urls = [],
-    url = 'http://www.cangqionglongqi.com/',
+    url = 'http://www.biquzi.com',
+    // url = 'http://www.cangqionglongqi.com/',
     currentNovelSections = null,
     novelname = '',
     filepath = '',
