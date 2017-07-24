@@ -18,7 +18,7 @@ let urls = [],
     isComplete = false,
     q = async.queue(function (task, cb) {
         getText(task, cb);
-    });
+    }, 1);
 
 app.engine('hbs', handlebars.engine);
 app.set('view engine', 'hbs');
@@ -26,8 +26,8 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser());
 fs.statSync('novel') || fs.mkdirSync('novel');
 
-function getAllTitleUrls() {
-    request({ url: url, method: 'GET', encoding: 'binary' }, function (err, res, body) {
+function getAllTitleUrls(requestUrl, currentSectionId) {
+    request({ url: requestUrl, method: 'GET', encoding: 'binary' }, function (err, res, body) {
         let html = iconv.decode(new Buffer(body, 'binary'), 'gb2312'),
             $ = cheerio.load(html, { decodeEntities: false }),
             allList = $("#list dd");
@@ -35,11 +35,11 @@ function getAllTitleUrls() {
             let urlContainer = {};
             urlContainer.id = i + 1;
             urlContainer.url = url + allList[i].childNodes[0].attribs.href;
-            urlContainer.title = allList[i].childNodes[0].childNodes[0].data;
+            urlContainer.title = allList[i].childNodes[0].childNodes[0] ? allList[i].childNodes[0].childNodes[0].data : '';
             urls.push(urlContainer);
         }
-        if (arguments[0]) {
-            urls = urls.splice(arguments[0]);
+        if (currentSectionId) {
+            urls = urls.splice(currentSectionId);
         }
         q.resume();
         for (let index in urls) {
@@ -55,7 +55,6 @@ function getText(urlContainer, cb) {
     request({ url: urlContainer.url, method: 'GET', encoding: 'binary', timeout: 10000 }, function (err, res, body) {
         if (err || res.statusCode !== 200) {
             err ? console.log(err) : console.log(res.statusCode);
-            q.push(urlContainer);
             cb();
         } else {
             console.log('现在正在抓取的是 ' + urlContainer.title);
@@ -77,13 +76,13 @@ app.get('/', function (req, res) {
     res.render('home');
 });
 app.post('/writeFile/:novelName', function (req, res) {
-    urls = [], url = 'http://www.cangqionglongqi.com/';
+    urls = [], url = 'http://www.biquzi.com';
     isComplete = false;
     novelname = req.params.novelName;
-    url = url + novelname;
+    requestUrl = url + '/' + novelname;
     let filename = novelname + new Date().getTime() + '.txt';
     filepath = __dirname + '/novel/' + filename;
-    getAllTitleUrls();
+    getAllTitleUrls(requestUrl);
     res.send(filename);
 });
 app.post('/writeProcess', function (req, res) {
@@ -106,9 +105,11 @@ app.get('/downloadFile', function (req, res) {
     res.download(filepath, novelname + '.txt');
 });
 app.post('/appendFile', function (req, res) {
-    let currentFilename = req.body.novelName, currentSectionId = req.body.id;
-    if (fs.existsSync(currentFilename)) {
-        getAllTitleUrls(currentSectionId);
+    let novelUrl = req.body.novelUrl, novelname = req.body.name, currentSectionId = req.body.id;
+    if (fs.existsSync('novel/' + novelname)) {
+        filepath = __dirname + '/novel/' + novelname;
+        getAllTitleUrls(novelUrl, currentSectionId);
+        res.send(novelname);
     } else {
         res.send('文件不存在');
     }

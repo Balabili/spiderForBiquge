@@ -16,7 +16,7 @@ var app = new Vue({
     methods: {
         writeFile: function () {
             var self = this,
-                novelName = $("#novelUrl").val();
+                novelName = $("#novelUrl").val().replace('http://www.biquzi.com/', '').replace('/', '');
             self.process = 0;
             $.ajax({
                 url: '/writeFile/' + novelName,
@@ -57,12 +57,17 @@ var app = new Vue({
             });
         },
         appendExistFile: function () {
-            var self = this, appendFilename = $("#filename").val(), appdenSectionId = $("#currentSectionId").val();
+            var self = this, novelUrl = $("#novelUrl").val(),
+                appendFilename = $("#filename").val(), appdenSectionId = $("#currentSectionId").val();
             $.ajax({
-                url: '/appendFile' + novelName,
+                url: '/appendFile',
                 type: 'POST',
-                data: { name: appendFilename, id: appdenSectionId },
+                data: { novelUrl: novelUrl, name: appendFilename, id: appdenSectionId },
                 success: function (result) {
+                    if (result === '文件不存在') {
+                        alert('文件不存在');
+                        return;
+                    }
                     self.writeFileName = result;
                     setTimeout(function () {
                         self.getWriteProcess();
@@ -78,3 +83,29 @@ var app = new Vue({
         }
     }
 });
+
+window.onload = function () {
+    $('#writeNewNocel').on('click', function () {
+        let newFileTab = document.getElementById('writeNewNocel'),
+            appendFileTab = document.getElementById('appdenExistNovel');
+        if (newFileTab.className === 'active') {
+            return;
+        } else {
+            newFileTab.className = 'active';
+            appendFileTab.className = '';
+            app.writeNewFile = true;
+        }
+    });
+
+    $('#appdenExistNovel').on('click', function () {
+        let newFileTab = document.getElementById('writeNewNocel'),
+            appendFileTab = document.getElementById('appdenExistNovel');
+        if (appendFileTab.className === 'active') {
+            return;
+        } else {
+            appendFileTab.className = 'active';
+            newFileTab.className = '';
+            app.writeNewFile = false;
+        }
+    });
+}
