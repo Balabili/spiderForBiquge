@@ -8,4 +8,4 @@
 
 当前问题：若是请求超时，请求超时的文章会被跳过没有写入到文件中。
 
-![写入文件](https://github.com/Balabili/spiderForBiquge/tree/master/public/img/novel.png)
+![写入文件](/public/img/novel.png)
