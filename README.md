@@ -7,3 +7,5 @@
 使用request + async + cheerio完成小说爬虫，首先获取小说的所有章节的url，在通过async.queue方法将获取到的所有小说章节的内容按顺序写入文件。若中途停止，可通过记住刚刚写入文件的文件名和终止章节的id进行续写。
 
 当前问题：若是请求超时，请求超时的文章会被跳过没有写入到文件中。
+
+![写入文件](https://github.com/Balabili/spiderForBiquge/tree/master/public/img/novel.png)

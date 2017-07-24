@@ -16,7 +16,7 @@ var app = new Vue({
     methods: {
         writeFile: function () {
             var self = this,
-                novelName = $("#novelUrl").val().replace('http://www.biquzi.com/', '').replace('/', '');
+                novelName = $("#novelUrl").val().replace('http://www.biquzi.com/', '').replace('/', '').replace(/(^\s*)|(\s*$)/g, '');
             self.process = 0;
             $.ajax({
                 url: '/writeFile/' + novelName,
@@ -38,6 +38,10 @@ var app = new Vue({
                 type: 'POST',
                 data: {},
                 success: function (result) {
+                    if (result === false) {
+                        alert('当前输入的url错误');
+                        return;
+                    }
                     if (result === true) {
                         self.isStart = false;
                         self.process = 100;

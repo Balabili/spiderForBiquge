@@ -11,7 +11,6 @@ const express = require('express'),
     });
 let urls = [],
     url = 'http://www.biquzi.com',
-    // url = 'http://www.cangqionglongqi.com/',
     currentNovelSections = null,
     novelname = '',
     filepath = '',
@@ -26,8 +25,17 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser());
 fs.statSync('novel') || fs.mkdirSync('novel');
 
+app.use(function (err, req, res, next) {
+    console.log(err);
+    next();
+});
+
 function getAllTitleUrls(requestUrl, currentSectionId) {
     request({ url: requestUrl, method: 'GET', encoding: 'binary' }, function (err, res, body) {
+        if (err || res.statusCode !== 200) {
+            err ? console.log(err) : console.log(res.statusCode);
+            return;
+        }
         let html = iconv.decode(new Buffer(body, 'binary'), 'gb2312'),
             $ = cheerio.load(html, { decodeEntities: false }),
             allList = $("#list dd");
@@ -55,7 +63,6 @@ function getText(urlContainer, cb) {
     request({ url: urlContainer.url, method: 'GET', encoding: 'binary', timeout: 10000 }, function (err, res, body) {
         if (err || res.statusCode !== 200) {
             err ? console.log(err) : console.log(res.statusCode);
-            cb();
         } else {
             console.log('现在正在抓取的是 ' + urlContainer.title);
             let html = iconv.decode(new Buffer(body, 'binary'), 'gb2312'),
@@ -67,8 +74,8 @@ function getText(urlContainer, cb) {
                 isComplete = true;
                 q.pause();
             }
-            cb();
         }
+        cb();
     });
 };
 
@@ -87,6 +94,9 @@ app.post('/writeFile/:novelName', function (req, res) {
 });
 app.post('/writeProcess', function (req, res) {
     let data = {};
+    if (urls.length === 0) {
+        res.send(false);
+    }
     if (isComplete) {
         res.send(true);
         return;
