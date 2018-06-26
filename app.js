@@ -10,7 +10,7 @@ const express = require('express'),
         extname: 'hbs'
     });
 let urls = [],
-    url = 'http://www.biquzi.com',
+    url = 'https://www.cangqionglongqi.com/chongmei/',
     currentNovelSections = null,
     novelname = '',
     filepath = '',
@@ -42,7 +42,7 @@ function getAllTitleUrls(requestUrl, currentSectionId) {
         for (let i = 0; i < allList.length; i++) {
             let urlContainer = {};
             urlContainer.id = i + 1;
-            urlContainer.url = url + allList[i].childNodes[0].attribs.href;
+            urlContainer.url = url + '/' + novelname + '/' + allList[i].childNodes[0].attribs.href;
             urlContainer.title = allList[i].childNodes[0].childNodes[0] ? allList[i].childNodes[0].childNodes[0].data : '';
             urls.push(urlContainer);
         }
@@ -83,7 +83,7 @@ app.get('/', function (req, res) {
     res.render('home');
 });
 app.post('/writeFile/:novelName', function (req, res) {
-    urls = [], url = 'http://www.biquzi.com';
+    urls = [], url = 'https://www.cangqionglongqi.com';
     isComplete = false;
     novelname = req.params.novelName;
     requestUrl = url + '/' + novelname;

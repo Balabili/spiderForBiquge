@@ -16,7 +16,7 @@ var app = new Vue({
     methods: {
         writeFile: function () {
             var self = this,
-                novelName = $("#novelUrl").val().replace('http://www.biquzi.com/', '').replace('/', '').replace(/(^\s*)|(\s*$)/g, '');
+                novelName = $("#novelUrl").val().replace('https://www.cangqionglongqi.com/', '').replace('/', '').replace(/(^\s*)|(\s*$)/g, '');
             self.process = 0;
             $.ajax({
                 url: '/writeFile/' + novelName,
